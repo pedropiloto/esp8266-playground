@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    
+    <title>Coin Ticker</title>
+
+    <style>
+b* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #f1f1f1;
+}
+
+#regForm {
+  background-color: #ffffff;
+  margin: 100px auto;
+  font-family: Raleway;
+  padding: 40px;
+  width: 70%;
+  min-width: 300px;
+}
+
+h1 {
+  text-align: center;  
+}
+
+input {
+  padding: 10px;
+  width: 100%;
+  font-size: 17px;
+  font-family: Raleway;
+  border: 1px solid #aaaaaa;
+}
+
+/* Mark input boxes that gets an error on validation: */
+input.invalid {
+  background-color: #ffdddd;
+}
+
+/* Hide all steps by default: */
+.tab {
+  display: none;
+}
+
+button {
+  background-color: #4CAF50;
+  color: #ffffff;
+  border: none;
+  padding: 10px 20px;
+  font-size: 17px;
+  font-family: Raleway;
+  cursor: pointer;
+}
+
+button:hover {
+  opacity: 0.8;
+}
+
+#prevBtn {
+  background-color: #bbbbbb;
+}
+
+/* Make circles that indicate the steps of the form: */
+.step {
+  height: 15px;
+  width: 15px;
+  margin: 0 2px;
+  background-color: #bbbbbb;
+  border: none;  
+  border-radius: 50%;
+  display: inline-block;
+  opacity: 0.5;
+}
+
+.step.active {
+  opacity: 1;
+}
+
+/* Mark the steps that are finished and valid: */
+.step.finish {
+  background-color: #4CAF50;
+}
+    </style>
+</head>
+
+<body>
+
+  <form id="regForm" onsubmit="event.preventDefault();">
+  <h1>Configure Crypto Value Displayer</h1>
+  <!-- One "tab" for each step in the form: -->
+  <div class="tab" id="tab1">Connect to Wi-Fi:
+    <p><input placeholder="SSID" oninput="this.className = ''" name="ssid" id="ssid_data"></p>
+    <p><input placeholder="Password" type="password" oninput="this.className = ''" name="password" id="password_data"></p>
+    <button type="button" onclick="submitData()">Submit</button>
+  </div>
+  <!-- <div class="tab" id="tab2">Configure Cryptocurrencies:
+    <p><input placeholder="E-mail..." oninput="this.className = ''" name="email"></p>
+    <p><input placeholder="Phone..." oninput="this.className = ''" name="phone"></p>
+  </div> -->
+  <div style="overflow:auto;">
+    <div style="float:right;">
+    </div>
+  </div>
+  <!-- Circles which indicates the steps of the form: -->
+  <div style="text-align:center;margin-top:40px;">
+    <span class="step" onclick="goTo(1)"></span>
+    <!-- <span class="step" onclick="goTo(2)"></span> -->
+  </div>
+
+  <p>Status: <span id="device_status">Establishing Connection...</span></p>
+</form>
+    
+
+    <script>
+
+var currentTab = 1; // Current tab is set to be the first tab (0)
+showTab(currentTab); // Display the current tab
+
+function showTab(n) {
+  // This function will display the specified tab of the form...
+  var tab = document.getElementById(`tab${n}`);
+  
+  tab.style.display = "block";
+  //... and run a function that will display the correct step indicator:
+  fixStepIndicator(n)
+}
+
+function goTo(n) {
+  var tab = document.getElementById(`tab${currentTab}`);
+  tab.style.display = "none";
+  currentTab = n
+  showTab(currentTab);
+}
+
+function nextPrev(n) {
+  // This function will figure out which tab to display
+  var x = document.getElementsByClassName("tab");
+  // Exit the function if any field in the current tab is invalid:
+  if (n == 1 && !validateForm()) return false;
+  // Hide the current tab:
+  x[currentTab].style.display = "none";
+  // Increase or decrease the current tab by 1:
+  currentTab = currentTab + n;
+  // if you have reached the end of the form...
+  if (currentTab >= x.length) {
+    // ... the form gets submitted:
+    document.getElementById("regForm").submit();
+    return false;
+  }
+  // Otherwise, display the correct tab:
+  showTab(currentTab);
+}
+
+function fixStepIndicator(n) {
+  // This function removes the "active" class of all steps...
+  var i, x = document.getElementsByClassName("step");
+  for (i = 0; i < x.length; i++) {
+    x[i].className = x[i].className.replace(" active", "");
+  }
+  //... and adds the "active" class on the current step:
+  x[n].className += " active";
+}
+
+        setInterval(function () {
+            // Call a function repetatively with 2 Second interval
+            getData();
+        }, 2000); //2000mSeconds update rate
+
+        function getData() {
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    document.getElementById("device_status").innerHTML =
+                        map_status(this.responseText);
+                }
+            };
+            xhttp.open("GET", "status", true);
+            xhttp.send();
+        }
+
+        function submitData() {
+            console.log("cenas")
+            var xhttp = new XMLHttpRequest();
+            xhttp.open("POST", "submit_data", true);
+            xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    document.getElementById("ssid_data").value = ""
+                    document.getElementById("password_data").value = ""
+                }
+                document.getElementById("device_status").innerHTML = map_status("CONNECTING");
+            };
+            xhttp.send(`ssid_data=${document.getElementById("ssid_data").value}&pass_data=${document.getElementById("password_data").value}`);
+        }
+
+        function map_status(status){
+          switch(status){
+            case "CONNECTION_FAILED_STATUS":
+              return "Connection could not be established. Please try again."
+            case "STARTING":
+            return "Starting the crypto value displayer."
+            case "WAITING_FOR_WIFI_CONNECTION":
+              return "Please provide the wifi connection information."
+            case "CONNECTING":
+              return "Attempting to connect to your wifi connection. Please wait."
+            case "WIFI_CONNECTED":
+              return "Wifi connection was established successfully."
+            default:
+              return status
+          }
+        }
+    </script>
+</body>
+
+</html>
